@@ -1,4 +1,4 @@
-// CSV export URLs (Homes updated)
+// CSV export URLs
 const HOMES_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ2g8Xetp_JfJIYCc0tHL_5x32J8YEBj0ktEgdHUgndEsPg579vVzjQpCUbRB_Kl4WthlifMm4px8TV/pub?gid=0&single=true&output=csv';
 const POOLS_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ2g8Xetp_JfJIYCc0tHL_5x32J8YEBj0ktEgdHUgndEsPg579vVzjQpCUbRB_Kl4WthlifMm4px8TV/pub?gid=638369421&single=true&output=csv';
 
@@ -74,7 +74,7 @@ function renderHomes(homes) {
     const address = findField(h, ['Address', 'address', 'Street Address', 'street']);
     const rent = findField(h, ['Monthly Rent', 'Rent', 'monthly_rent', 'rent']);
     const beds = findField(h, ['Bedrooms', 'Beds', 'beds']);
-    const baths = findField(h, ['Bathrooms', 'Baths', 'baths']);
+    const baths = findField(h, ['Bathrooms', 'Baths', 'baths', 'Bath']);
     const zillow = normalizeUrl(findField(h, ['Zillow URL', 'Zillow', 'zillow']));
     const card = document.createElement('div');
     card.className = 'col';
@@ -102,17 +102,33 @@ function renderHomes(homes) {
 
 async function init() {
   try {
-    const [homes, pools] = await Promise.all([
-      fetchCSV(HOMES_CSV_URL),
-      fetchCSV(POOLS_CSV_URL)
-    ]);
-    console.log('Parsed homes:', homes);
-    console.log('Parsed pools:', pools);
+    let homes = [];
+    let pools = [];
+    
+    // Fetch homes (required)
+    try {
+      homes = await fetchCSV(HOMES_CSV_URL);
+      console.log('Parsed homes:', homes);
+    } catch (err) {
+      console.error('Failed to load homes:', err);
+      const app = document.getElementById('app');
+      app.innerHTML = `<div class="alert alert-danger">Failed to load homes data: ${err.message}</div>`;
+      return;
+    }
+    
+    // Fetch pools (optional - render homes even if pools fails)
+    try {
+      pools = await fetchCSV(POOLS_CSV_URL);
+      console.log('Parsed pools:', pools);
+    } catch (err) {
+      console.warn('Pools data not available:', err.message);
+    }
+    
     renderHomes(homes);
   } catch (err) {
     console.error(err);
     const app = document.getElementById('app');
-    app.innerHTML = `<div class="alert alert-danger">Failed to load data: ${err.message}</div>`;
+    app.innerHTML = `<div class="alert alert-danger">Error: ${err.message}</div>`;
   } finally {
     const loading = document.getElementById('loading');
     if (loading) loading.remove();
