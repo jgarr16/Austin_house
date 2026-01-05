@@ -69,12 +69,13 @@ function normalizeUrl(url) {
 
 function filterHomes(homes) {
   return homes.filter(home => {
-    // Check Viable? field - exclude if "No" or empty/blank
+    // Check Viable? field - exclude if "No" or empty/blank, include "Yes" and "Maybe"
     const viable = findField(home, ['Viable?', 'Viable', 'viable']);
     const viableLower = (viable || '').trim().toLowerCase();
     if (viableLower === 'no' || viableLower === '') {
       return false;
     }
+    // Include "yes" and "maybe" (and any other non-empty value that isn't "no")
     
     // Check for rows with lots of blanks
     // Count non-empty fields
@@ -105,6 +106,7 @@ function renderHomes(homes) {
     const rent = findField(h, ['Monthly Rent', 'Rent', 'monthly_rent', 'rent']);
     const beds = findField(h, ['Bedrooms', 'Beds', 'beds']);
     const baths = findField(h, ['Bathrooms', 'Baths', 'baths', 'Bath']);
+    const sqft = findField(h, ['Square Footage', 'Square Feet', 'sqft', 'sq ft', 'square_feet']);
     const zillow = normalizeUrl(findField(h, ['Zillow URL', 'Zillow', 'zillow']));
     const card = document.createElement('div');
     card.className = 'col';
@@ -119,6 +121,7 @@ function renderHomes(homes) {
             <li><strong>Rent:</strong> ${rent || '—'}</li>
             <li><strong>Beds:</strong> ${beds || '—'}</li>
             <li><strong>Baths:</strong> ${baths || '—'}</li>
+            <li><strong>Square Feet:</strong> ${sqft || '—'}</li>
           </ul>
           <div class="mt-auto d-grid">
             <a class="btn btn-zillow btn-lg ${zillow ? '' : 'disabled'}" href="${zillow || '#'}" target="_blank" rel="noopener">Open Zillow Listing</a>
