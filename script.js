@@ -117,19 +117,25 @@ function renderHomes(homes) {
     const viable = findField(h, ['Viable?', 'Viable', 'viable']);
     const viableLower = (viable || '').trim().toLowerCase();
     
-    // Determine CSS class based on viable status
-    let viableClass = '';
+    // Determine background color based on viable status
+    let bgColor = '';
     if (viableLower === 'yes') {
-      viableClass = 'card-viable-yes';
+      bgColor = '#d4edda'; // light green
     } else if (viableLower === 'maybe') {
-      viableClass = 'card-viable-maybe';
+      bgColor = '#fff3cd'; // light yellow
+    }
+    
+    // Debug logging
+    if (bgColor) {
+      console.log('Applying background color:', bgColor, 'to address:', address, 'viable:', viable);
     }
     
     const card = document.createElement('div');
     card.className = 'col';
+    const styleAttr = bgColor ? `style="background-color: ${bgColor} !important;"` : '';
     card.innerHTML = `
-      <div class="card h-100 shadow-sm ${viableClass}">
-        <div class="card-body d-flex flex-column">
+      <div class="card h-100 shadow-sm" ${styleAttr}>
+        <div class="card-body d-flex flex-column" ${styleAttr}>
           <div class="mb-2">
             <div class="text-muted small">Address</div>
             <div class="card-address">${address || '—'}</div>
