@@ -2,3 +2,5 @@ body { background: #f8f9fa; }
 .card-address { font-weight: 600; }
 .btn-zillow { background-color: #0074e4; color: #fff; border: none; }
 .btn-zillow:hover { background-color: #005bb5; color: #fff; }
+.card-viable-yes { background-color: #d4edda; }
+.card-viable-maybe { background-color: #fff3cd; }

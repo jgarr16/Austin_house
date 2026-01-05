@@ -1,6 +1,6 @@
-// Local CSV file paths
-const HOMES_CSV_URL = './data/homes.csv';
-const POOLS_CSV_URL = './data/pools.csv';
+// CSV export URLs (Google Sheets)
+const HOMES_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ2g8Xetp_JfJIYCc0tHL_5x32J8YEBj0ktEgdHUgndEsPg579vVzjQpCUbRB_Kl4WthlifMm4px8TV/pub?gid=0&single=true&output=csv';
+const POOLS_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ2g8Xetp_JfJIYCc0tHL_5x32J8YEBj0ktEgdHUgndEsPg579vVzjQpCUbRB_Kl4WthlifMm4px8TV/pub?gid=638369421&single=true&output=csv';
 
 function parseCSV(csvText) {
   const lines = csvText.trim().split('\n');
@@ -72,6 +72,13 @@ function filterHomes(homes) {
     // Check Viable? field - exclude if "No" or empty/blank, include "Yes" and "Maybe"
     const viable = findField(home, ['Viable?', 'Viable', 'viable']);
     const viableLower = (viable || '').trim().toLowerCase();
+    
+    // Debug logging for viable field
+    const address = findField(home, ['Address', 'address', 'Street Address', 'street']);
+    if (viableLower === 'maybe') {
+      console.log('Found maybe entry:', address, 'viable:', viable);
+    }
+    
     if (viableLower === 'no' || viableLower === '') {
       return false;
     }
@@ -89,7 +96,6 @@ function filterHomes(homes) {
     }
     
     // Also exclude if key fields are missing (Address is essential)
-    const address = findField(home, ['Address', 'address', 'Street Address', 'street']);
     if (!address || address.trim() === '') {
       return false;
     }
@@ -108,10 +114,21 @@ function renderHomes(homes) {
     const baths = findField(h, ['Bathrooms', 'Baths', 'baths', 'Bath']);
     const sqft = findField(h, ['Square Footage', 'Square Feet', 'sqft', 'sq ft', 'square_feet']);
     const zillow = normalizeUrl(findField(h, ['Zillow URL', 'Zillow', 'zillow']));
+    const viable = findField(h, ['Viable?', 'Viable', 'viable']);
+    const viableLower = (viable || '').trim().toLowerCase();
+    
+    // Determine CSS class based on viable status
+    let viableClass = '';
+    if (viableLower === 'yes') {
+      viableClass = 'card-viable-yes';
+    } else if (viableLower === 'maybe') {
+      viableClass = 'card-viable-maybe';
+    }
+    
     const card = document.createElement('div');
     card.className = 'col';
     card.innerHTML = `
-      <div class="card h-100 shadow-sm">
+      <div class="card h-100 shadow-sm ${viableClass}">
         <div class="card-body d-flex flex-column">
           <div class="mb-2">
             <div class="text-muted small">Address</div>
@@ -157,7 +174,11 @@ async function init() {
     
     // Filter homes before rendering
     const filteredHomes = filterHomes(homes);
-    console.log(`Filtered ${homes.length} homes to ${filteredHomes.length} viable homes`);
+    const maybeCount = filteredHomes.filter(h => {
+      const viable = findField(h, ['Viable?', 'Viable', 'viable']);
+      return (viable || '').trim().toLowerCase() === 'maybe';
+    }).length;
+    console.log(`Filtered ${homes.length} homes to ${filteredHomes.length} viable homes (${maybeCount} with "maybe" status)`);
     renderHomes(filteredHomes);
   } catch (err) {
     console.error(err);
