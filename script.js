@@ -89,9 +89,14 @@ function getZillowImageUrl(zillowUrl) {
     const zpid = zpidMatch[1];
     // Try multiple Zillow image URL formats
     // Format 1: Standard Zillow photo URL (most common)
-    const imageUrl = `https://photos.zillowstatic.com/fp/${zpid}_cc_ft_768_576_sq.jpg`;
-    console.log('Generated Zillow image URL:', imageUrl, 'from zpid:', zpid, 'original URL:', zillowUrl);
-    return imageUrl;
+    const directUrl = `https://photos.zillowstatic.com/fp/${zpid}_cc_ft_768_576_sq.jpg`;
+    
+    // Use CORS proxy to bypass CORS restrictions
+    // Using images.weserv.nl as a free CORS proxy
+    const proxiedUrl = `https://images.weserv.nl/?url=${encodeURIComponent(directUrl)}`;
+    
+    console.log('Generated Zillow image URL:', directUrl, 'Proxied:', proxiedUrl, 'from zpid:', zpid);
+    return proxiedUrl;
   }
   console.log('Could not extract zpid from URL:', zillowUrl);
   return '';
@@ -169,9 +174,16 @@ function renderHomes(homes) {
     const card = document.createElement('div');
     card.className = 'col';
     const styleAttr = bgColor ? `style="background-color: ${bgColor} !important;"` : '';
+    
+    // Create image element with better error handling
+    let imageHtml = '';
+    if (zillowImageUrl) {
+      imageHtml = `<img src="${zillowImageUrl}" class="card-img-top" alt="${address || 'Property image'}" style="height: 200px; object-fit: cover; width: 100%;" crossorigin="anonymous" onerror="console.error('Failed to load image:', this.src); this.style.display='none';" onload="console.log('Image loaded:', this.src);">`;
+    }
+    
     card.innerHTML = `
       <div class="card h-100 shadow-sm" ${styleAttr}>
-        ${zillowImageUrl ? `<img src="${zillowImageUrl}" class="card-img-top" alt="${address || 'Property image'}" style="height: 200px; object-fit: cover;" onerror="this.style.display='none';">` : ''}
+        ${imageHtml}
         <div class="card-body d-flex flex-column" ${styleAttr}>
           <div class="mb-2">
             <div class="text-muted small">Address</div>
