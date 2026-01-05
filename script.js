@@ -80,6 +80,19 @@ function normalizeUrl(url) {
   return 'https://' + url;
 }
 
+function getZillowImageUrl(zillowUrl) {
+  if (!zillowUrl || !zillowUrl.includes('zillow.com')) return '';
+  
+  // Extract zpid from Zillow URL (format: .../[zpid]_zpid/ or .../[zpid]_zpid?)
+  const zpidMatch = zillowUrl.match(/\/(\d+)_zpid/);
+  if (zpidMatch && zpidMatch[1]) {
+    const zpid = zpidMatch[1];
+    // Zillow image URL format - try multiple sizes
+    return `https://photos.zillowstatic.com/fp/${zpid}_cc_ft_768_576_sq.jpg`;
+  }
+  return '';
+}
+
 function filterHomes(homes) {
   return homes.filter(home => {
     // Check Viable? field - exclude if "No" or empty/blank, include "Yes" and "Maybe"
@@ -146,11 +159,15 @@ function renderHomes(homes) {
       console.log('✓ Applying background color:', bgColor, 'to address:', address);
     }
     
+    // Get Zillow image URL
+    const zillowImageUrl = getZillowImageUrl(zillow);
+    
     const card = document.createElement('div');
     card.className = 'col';
     const styleAttr = bgColor ? `style="background-color: ${bgColor} !important;"` : '';
     card.innerHTML = `
       <div class="card h-100 shadow-sm" ${styleAttr}>
+        ${zillowImageUrl ? `<img src="${zillowImageUrl}" class="card-img-top" alt="${address || 'Property image'}" style="height: 200px; object-fit: cover;" onerror="this.style.display='none';">` : ''}
         <div class="card-body d-flex flex-column" ${styleAttr}>
           <div class="mb-2">
             <div class="text-muted small">Address</div>
