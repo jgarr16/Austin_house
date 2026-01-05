@@ -67,6 +67,36 @@ function normalizeUrl(url) {
   return 'https://' + url;
 }
 
+function filterHomes(homes) {
+  return homes.filter(home => {
+    // Check Viable? field - exclude if "No" or empty/blank
+    const viable = findField(home, ['Viable?', 'Viable', 'viable']);
+    const viableLower = (viable || '').trim().toLowerCase();
+    if (viableLower === 'no' || viableLower === '') {
+      return false;
+    }
+    
+    // Check for rows with lots of blanks
+    // Count non-empty fields
+    const fields = Object.values(home);
+    const nonEmptyFields = fields.filter(f => f && f.trim() !== '').length;
+    const totalFields = fields.length;
+    
+    // Exclude if more than 50% of fields are blank
+    if (nonEmptyFields / totalFields < 0.5) {
+      return false;
+    }
+    
+    // Also exclude if key fields are missing (Address is essential)
+    const address = findField(home, ['Address', 'address', 'Street Address', 'street']);
+    if (!address || address.trim() === '') {
+      return false;
+    }
+    
+    return true;
+  });
+}
+
 function renderHomes(homes) {
   const container = document.getElementById('homes-container');
   container.innerHTML = '';
@@ -122,7 +152,10 @@ async function init() {
       console.warn('Pools data not available:', err.message);
     }
     
-    renderHomes(homes);
+    // Filter homes before rendering
+    const filteredHomes = filterHomes(homes);
+    console.log(`Filtered ${homes.length} homes to ${filteredHomes.length} viable homes`);
+    renderHomes(filteredHomes);
   } catch (err) {
     console.error(err);
     const app = document.getElementById('app');
