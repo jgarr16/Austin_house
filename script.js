@@ -87,23 +87,12 @@ function getZillowImageUrl(zillowUrl) {
   const zpidMatch = zillowUrl.match(/\/(\d+)_zpid/);
   if (zpidMatch && zpidMatch[1]) {
     const zpid = zpidMatch[1];
-    // Try multiple Zillow image URL formats
-    // Format 1: Standard Zillow photo URL (most common) - try direct first
-    const directUrl = `https://photos.zillowstatic.com/fp/${zpid}_cc_ft_768_576_sq.jpg`;
+    // Try direct Zillow image URL - images loaded via <img> tag often work even if fetch doesn't
+    // Format: https://photos.zillowstatic.com/fp/{zpid}_cc_ft_{width}_{height}_sq.jpg
+    const imageUrl = `https://photos.zillowstatic.com/fp/${zpid}_cc_ft_768_576_sq.jpg`;
     
-    // Also try alternative formats
-    const altUrl1 = `https://photos.zillowstatic.com/fp/${zpid}_p_f.jpg`;
-    const altUrl2 = `https://photos.zillowstatic.com/fp/${zpid}_cc_ft_1536_1152_sq.jpg`;
-    
-    // Use CORS proxy as fallback - using images.weserv.nl
-    const proxiedUrl = `https://images.weserv.nl/?url=${encodeURIComponent(directUrl)}&output=jpg`;
-    
-    console.log('Generated Zillow image URLs for zpid:', zpid);
-    console.log('  Direct:', directUrl);
-    console.log('  Proxied:', proxiedUrl);
-    
-    // Return proxied URL first (better CORS support), will fallback to direct if proxy fails
-    return proxiedUrl;
+    console.log('Generated Zillow image URL for zpid:', zpid, 'URL:', imageUrl);
+    return imageUrl;
   }
   console.log('Could not extract zpid from URL:', zillowUrl);
   return '';
@@ -182,10 +171,32 @@ function renderHomes(homes) {
     card.className = 'col';
     const styleAttr = bgColor ? `style="background-color: ${bgColor} !important;"` : '';
     
-    // Create image element with better error handling
+    // Create image element with fallback URLs
     let imageHtml = '';
     if (zillowImageUrl) {
-      imageHtml = `<img src="${zillowImageUrl}" class="card-img-top" alt="${address || 'Property image'}" style="height: 200px; object-fit: cover; width: 100%;" crossorigin="anonymous" onerror="console.error('Failed to load image:', this.src); this.style.display='none';" onload="console.log('Image loaded:', this.src);">`;
+      // Extract zpid for fallback URLs
+      const zpidMatch = zillow.match(/\/(\d+)_zpid/);
+      const zpid = zpidMatch ? zpidMatch[1] : '';
+      
+      // Try multiple image URL formats as fallbacks
+      const fallbackUrls = zpid ? [
+        `https://photos.zillowstatic.com/fp/${zpid}_cc_ft_768_576_sq.jpg`,
+        `https://photos.zillowstatic.com/fp/${zpid}_p_f.jpg`,
+        `https://photos.zillowstatic.com/fp/${zpid}_cc_ft_1536_1152_sq.jpg`,
+        `https://photos.zillowstatic.com/fp/${zpid}_cc_ft_384_288_sq.jpg`
+      ] : [zillowImageUrl];
+      
+      // Create image with fallback mechanism
+      imageHtml = `<img src="${zillowImageUrl}" class="card-img-top" alt="${address || 'Property image'}" style="height: 200px; object-fit: cover; width: 100%;" onerror="
+        const fallbacks = ${JSON.stringify(fallbackUrls)};
+        const currentIndex = fallbacks.indexOf(this.src);
+        if (currentIndex < fallbacks.length - 1) {
+          this.src = fallbacks[currentIndex + 1];
+        } else {
+          console.error('All image URLs failed for zpid:', '${zpid}');
+          this.style.display='none';
+        }
+      " onload="console.log('Image loaded successfully:', this.src);">`;
     }
     
     card.innerHTML = `
