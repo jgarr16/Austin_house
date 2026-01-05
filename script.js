@@ -1,29 +1,55 @@
-// Google Sheets pubhtml links (public)
-const HOMES_PUBHTML = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ2g8Xetp_JfJIYCc0tHL_5x32J8YEBj0ktEgdHUgndEsPg579vVzjQpCUbRB_Kl4WthlifMm4px8TV/pubhtml?gid=0&single=true';
-const POOLS_PUBHTML = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ2g8Xetp_JfJIYCc0tHL_5x32J8YEBj0ktEgdHUgndEsPg579vVzjQpCUbRB_Kl4WthlifMm4px8TV/pubhtml?gid=638369421&single=true';
+// CSV export URLs (same data as before, different format)
+const HOMES_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ2g8Xetp_JfJIYCc0tHL_5x32J8YEBj0ktEgdHUgndEsPg579vVzjQpCUbRB_Kl4WthlifMm4px8TV/export?format=csv&gid=0';
+const POOLS_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ2g8Xetp_JfJIYCc0tHL_5x32J8YEBj0ktEgdHUgndEsPg579vVzjQpCUbRB_Kl4WthlifMm4px8TV/export?format=csv&gid=638369421';
 
-function toGvizUrl(pubHtmlUrl) {
-  return pubHtmlUrl.replace('/pubhtml','/gviz/tq') + (pubHtmlUrl.includes('?') ? '&tqx=out:json' : '?tqx=out:json');
-}
-
-async function fetchGSheet(pubHtmlUrl) {
-  const url = toGvizUrl(pubHtmlUrl);
-  const res = await fetch(url);
-  const text = await res.text();
-  const m = text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\);/);
-  if (!m) throw new Error('Unexpected Google Sheets response format');
-  const json = JSON.parse(m[1]);
-  console.log('Raw JSON from', pubHtmlUrl, json);
-  return json;
-}
-
-function tableToObjects(gvizJson) {
-  const cols = gvizJson.table.cols.map(c => (c.label || c.id || '').trim());
-  return gvizJson.table.rows.map(row => {
+function parseCSV(csvText) {
+  const lines = csvText.trim().split('\n');
+  if (lines.length < 1) return [];
+  
+  const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+  const rows = [];
+  
+  for (let i = 1; i < lines.length; i++) {
+    const line = lines[i];
+    if (!line.trim()) continue;
+    
+    const values = [];
+    let current = '';
+    let inQuotes = false;
+    
+    for (let j = 0; j < line.length; j++) {
+      const char = line[j];
+      if (char === '"') {
+        if (inQuotes && line[j + 1] === '"') {
+          current += '"';
+          j++;
+        } else {
+          inQuotes = !inQuotes;
+        }
+      } else if (char === ',' && !inQuotes) {
+        values.push(current.trim().replace(/^"|"$/g, ''));
+        current = '';
+      } else {
+        current += char;
+      }
+    }
+    values.push(current.trim().replace(/^"|"$/g, ''));
+    
     const obj = {};
-    row.c.forEach((cell, i) => obj[cols[i] || `col${i}`] = cell ? cell.v : '');
-    return obj;
-  });
+    headers.forEach((h, idx) => {
+      obj[h] = values[idx] || '';
+    });
+    rows.push(obj);
+  }
+  
+  return rows;
+}
+
+async function fetchCSV(csvUrl) {
+  const res = await fetch(csvUrl);
+  const text = await res.text();
+  console.log('Raw CSV from', csvUrl, text);
+  return parseCSV(text);
 }
 
 function findField(obj, candidates) {
@@ -76,11 +102,12 @@ function renderHomes(homes) {
 
 async function init() {
   try {
-    const [homesJson, poolsJson] = await Promise.all([
-      fetchGSheet(HOMES_PUBHTML),
-      fetchGSheet(POOLS_PUBHTML)
+    const [homes, pools] = await Promise.all([
+      fetchCSV(HOMES_CSV_URL),
+      fetchCSV(POOLS_CSV_URL)
     ]);
-    const homes = tableToObjects(homesJson);
+    console.log('Parsed homes:', homes);
+    console.log('Parsed pools:', pools);
     renderHomes(homes);
   } catch (err) {
     console.error(err);
