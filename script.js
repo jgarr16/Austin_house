@@ -117,6 +117,9 @@ function renderHomes(homes) {
     const viable = findField(h, ['Viable?', 'Viable', 'viable']);
     const viableLower = (viable || '').trim().toLowerCase();
     
+    // Debug logging - log all viable values
+    console.log('Home:', address, '| Viable field value:', viable, '| Lowercase:', viableLower);
+    
     // Determine background color based on viable status
     let bgColor = '';
     if (viableLower === 'yes') {
@@ -125,9 +128,9 @@ function renderHomes(homes) {
       bgColor = '#fff3cd'; // light yellow
     }
     
-    // Debug logging
+    // Debug logging for colored items
     if (bgColor) {
-      console.log('Applying background color:', bgColor, 'to address:', address, 'viable:', viable);
+      console.log('✓ Applying background color:', bgColor, 'to address:', address);
     }
     
     const card = document.createElement('div');
