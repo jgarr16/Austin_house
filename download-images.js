@@ -27,10 +27,15 @@ function extractZpid(zillowUrl) {
 async function getZillowImageUrlFromPage(zillowUrl, page) {
   try {
     console.log(`Loading Zillow page: ${zillowUrl}`);
-    await page.goto(zillowUrl, { waitUntil: 'networkidle2', timeout: 30000 });
+    await page.goto(zillowUrl, { waitUntil: 'domcontentloaded', timeout: 30000 }).catch(err => {
+      console.error(`Failed to load page: ${err.message}`);
+      return null;
+    });
+    
+    if (!page) return null;
     
     // Wait for images to load
-    await page.waitForTimeout(2000);
+    await page.waitForTimeout(3000);
     
     // Try to find the primary image in various ways
     let imageUrl = null;
@@ -122,6 +127,35 @@ async function downloadAndResizeImage(imageUrl, outputPath) {
   }
 }
 
+// Process a single home with direct URL (fallback)
+async function processHomeDirect(home) {
+  const zillowUrl = home['Zillow URL'] || home['zillow'] || home['Zillow'];
+  if (!zillowUrl || !zillowUrl.includes('zillow.com')) {
+    return;
+  }
+
+  const zpid = extractZpid(zillowUrl);
+  if (!zpid) {
+    return;
+  }
+
+  const outputPath = path.join(IMAGES_DIR, `${zpid}.jpg`);
+  if (fs.existsSync(outputPath)) {
+    return;
+  }
+
+  // Try common Zillow image URL patterns
+  const patterns = [
+    `https://photos.zillowstatic.com/fp/${zpid}_cc_ft_768_576_sq.jpg`,
+    `https://photos.zillowstatic.com/fp/${zpid}_p_f.jpg`,
+  ];
+
+  for (const imageUrl of patterns) {
+    const success = await downloadAndResizeImage(imageUrl, outputPath);
+    if (success) return;
+  }
+}
+
 // Process a single home
 async function processHome(home, page) {
   const zillowUrl = home['Zillow URL'] || home['zillow'] || home['Zillow'];
@@ -175,24 +209,62 @@ async function main() {
         console.log(`Found ${homes.length} homes in CSV`);
         console.log('Starting image download process...\n');
 
-        // Launch browser once and reuse it
-        console.log('Launching browser...');
-        const browser = await puppeteer.launch({
-          headless: true,
-          args: ['--no-sandbox', '--disable-setuid-sandbox']
-        });
-        const page = await browser.newPage();
-        await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
-
+        // Try to use Puppeteer, but fallback to manual instructions if it fails
+        let browser = null;
+        let page = null;
+        
         try {
-          // Process homes sequentially to avoid overwhelming the server
-          for (const home of homes) {
-            await processHome(home, page);
-            // Small delay between requests
-            await new Promise(resolve => setTimeout(resolve, 2000));
+          console.log('Launching browser...');
+          browser = await puppeteer.launch({
+            headless: 'new',
+            args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
+          });
+          page = await browser.newPage();
+          await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+          
+          // Handle page errors
+          page.on('error', (err) => {
+            console.error('Page error:', err.message);
+          });
+          page.on('pageerror', (err) => {
+            console.error('Page error:', err.message);
+          });
+        } catch (error) {
+          console.error('Failed to launch browser:', error.message);
+          console.log('\n⚠️  Puppeteer browser launch failed. You have two options:');
+          console.log('1. Manually download images: Visit each Zillow URL and save the primary image as images/{zpid}.jpg');
+          console.log('2. Try running: PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=false npm run download-images');
+          console.log('\nFor now, trying direct image URLs...\n');
+        }
+
+        if (browser && page) {
+          try {
+            // Process homes sequentially to avoid overwhelming the server
+            for (const home of homes) {
+              try {
+                await processHome(home, page);
+              } catch (error) {
+                console.error(`Error processing home:`, error.message);
+              }
+              // Small delay between requests
+              await new Promise(resolve => setTimeout(resolve, 2000));
+            }
+          } catch (error) {
+            console.error('Error in main processing loop:', error.message);
+          } finally {
+            await browser.close();
           }
-        } finally {
-          await browser.close();
+        } else {
+          // Fallback: try direct image URLs (may not work due to Zillow blocking)
+          console.log('Attempting direct image downloads (may fail due to Zillow restrictions)...\n');
+          for (const home of homes) {
+            try {
+              await processHomeDirect(home);
+            } catch (error) {
+              // Silently fail - direct URLs likely won't work
+            }
+            await new Promise(resolve => setTimeout(resolve, 500));
+          }
         }
 
         console.log('\n✓ Image download process complete!');
