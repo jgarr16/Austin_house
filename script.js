@@ -114,10 +114,21 @@ function renderHomes(homes) {
     const baths = findField(h, ['Bathrooms', 'Baths', 'baths', 'Bath']);
     const sqft = findField(h, ['Square Footage', 'Square Feet', 'sqft', 'sq ft', 'square_feet']);
     const zillow = normalizeUrl(findField(h, ['Zillow URL', 'Zillow', 'zillow']));
+    const viable = findField(h, ['Viable?', 'Viable', 'viable']);
+    const viableLower = (viable || '').trim().toLowerCase();
+    
+    // Determine CSS class based on viable status
+    let viableClass = '';
+    if (viableLower === 'yes') {
+      viableClass = 'card-viable-yes';
+    } else if (viableLower === 'maybe') {
+      viableClass = 'card-viable-maybe';
+    }
+    
     const card = document.createElement('div');
     card.className = 'col';
     card.innerHTML = `
-      <div class="card h-100 shadow-sm">
+      <div class="card h-100 shadow-sm ${viableClass}">
         <div class="card-body d-flex flex-column">
           <div class="mb-2">
             <div class="text-muted small">Address</div>
