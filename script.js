@@ -1,6 +1,8 @@
-// CSV export URLs (Google Sheets)
+// CSV export URLs (Google Sheets) - fallback to local files if fetch fails
 const HOMES_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ2g8Xetp_JfJIYCc0tHL_5x32J8YEBj0ktEgdHUgndEsPg579vVzjQpCUbRB_Kl4WthlifMm4px8TV/pub?gid=0&single=true&output=csv';
 const POOLS_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ2g8Xetp_JfJIYCc0tHL_5x32J8YEBj0ktEgdHUgndEsPg579vVzjQpCUbRB_Kl4WthlifMm4px8TV/pub?gid=638369421&single=true&output=csv';
+const HOMES_CSV_LOCAL = './data/homes.csv';
+const POOLS_CSV_LOCAL = './data/pools.csv';
 
 function parseCSV(csvText) {
   const lines = csvText.trim().split('\n');
@@ -46,10 +48,21 @@ function parseCSV(csvText) {
 }
 
 async function fetchCSV(csvUrl) {
-  const res = await fetch(csvUrl);
-  const text = await res.text();
-  console.log('Raw CSV from', csvUrl, text.substring(0, 200));
-  return parseCSV(text);
+  try {
+    const res = await fetch(csvUrl);
+    if (!res.ok) {
+      throw new Error(`HTTP error! status: ${res.status} - ${res.statusText}`);
+    }
+    const text = await res.text();
+    if (!text || text.trim().length === 0) {
+      throw new Error('Empty response from server');
+    }
+    console.log('Raw CSV from', csvUrl, text.substring(0, 200));
+    return parseCSV(text);
+  } catch (err) {
+    console.error('Fetch error for', csvUrl, ':', err);
+    throw err;
+  }
 }
 
 function findField(obj, candidates) {
@@ -166,19 +179,31 @@ async function init() {
     
     try {
       homes = await fetchCSV(HOMES_CSV_URL);
-      console.log('Parsed homes:', homes);
+      console.log('Parsed homes from Google Sheets:', homes);
     } catch (err) {
-      console.error('Failed to load homes:', err);
-      const app = document.getElementById('app');
-      app.innerHTML = `<div class="alert alert-danger">Failed to load homes data: ${err.message}</div>`;
-      return;
+      console.warn('Failed to load homes from Google Sheets, trying local file:', err.message);
+      try {
+        homes = await fetchCSV(HOMES_CSV_LOCAL);
+        console.log('Parsed homes from local file:', homes);
+      } catch (localErr) {
+        console.error('Failed to load homes from both sources:', localErr);
+        const app = document.getElementById('app');
+        app.innerHTML = `<div class="alert alert-danger">Failed to load homes data. Please check the console for details.</div>`;
+        return;
+      }
     }
     
     try {
       pools = await fetchCSV(POOLS_CSV_URL);
-      console.log('Parsed pools:', pools);
+      console.log('Parsed pools from Google Sheets:', pools);
     } catch (err) {
-      console.warn('Pools data not available:', err.message);
+      console.warn('Failed to load pools from Google Sheets, trying local file:', err.message);
+      try {
+        pools = await fetchCSV(POOLS_CSV_LOCAL);
+        console.log('Parsed pools from local file:', pools);
+      } catch (localErr) {
+        console.warn('Pools data not available from either source:', localErr.message);
+      }
     }
     
     // Filter homes before rendering
