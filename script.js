@@ -87,9 +87,13 @@ function getZillowImageUrl(zillowUrl) {
   const zpidMatch = zillowUrl.match(/\/(\d+)_zpid/);
   if (zpidMatch && zpidMatch[1]) {
     const zpid = zpidMatch[1];
-    // Zillow image URL format - try multiple sizes
-    return `https://photos.zillowstatic.com/fp/${zpid}_cc_ft_768_576_sq.jpg`;
+    // Try multiple Zillow image URL formats
+    // Format 1: Standard Zillow photo URL (most common)
+    const imageUrl = `https://photos.zillowstatic.com/fp/${zpid}_cc_ft_768_576_sq.jpg`;
+    console.log('Generated Zillow image URL:', imageUrl, 'from zpid:', zpid, 'original URL:', zillowUrl);
+    return imageUrl;
   }
+  console.log('Could not extract zpid from URL:', zillowUrl);
   return '';
 }
 
