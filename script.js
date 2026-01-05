@@ -88,14 +88,21 @@ function getZillowImageUrl(zillowUrl) {
   if (zpidMatch && zpidMatch[1]) {
     const zpid = zpidMatch[1];
     // Try multiple Zillow image URL formats
-    // Format 1: Standard Zillow photo URL (most common)
+    // Format 1: Standard Zillow photo URL (most common) - try direct first
     const directUrl = `https://photos.zillowstatic.com/fp/${zpid}_cc_ft_768_576_sq.jpg`;
     
-    // Use CORS proxy to bypass CORS restrictions
-    // Using images.weserv.nl as a free CORS proxy
-    const proxiedUrl = `https://images.weserv.nl/?url=${encodeURIComponent(directUrl)}`;
+    // Also try alternative formats
+    const altUrl1 = `https://photos.zillowstatic.com/fp/${zpid}_p_f.jpg`;
+    const altUrl2 = `https://photos.zillowstatic.com/fp/${zpid}_cc_ft_1536_1152_sq.jpg`;
     
-    console.log('Generated Zillow image URL:', directUrl, 'Proxied:', proxiedUrl, 'from zpid:', zpid);
+    // Use CORS proxy as fallback - using images.weserv.nl
+    const proxiedUrl = `https://images.weserv.nl/?url=${encodeURIComponent(directUrl)}&output=jpg`;
+    
+    console.log('Generated Zillow image URLs for zpid:', zpid);
+    console.log('  Direct:', directUrl);
+    console.log('  Proxied:', proxiedUrl);
+    
+    // Return proxied URL first (better CORS support), will fallback to direct if proxy fails
     return proxiedUrl;
   }
   console.log('Could not extract zpid from URL:', zillowUrl);
