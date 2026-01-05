@@ -1,6 +1,6 @@
-// CSV export URLs
-const HOMES_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ2g8Xetp_JfJIYCc0tHL_5x32J8YEBj0ktEgdHUgndEsPg579vVzjQpCUbRB_Kl4WthlifMm4px8TV/pub?gid=0&single=true&output=csv';
-const POOLS_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ2g8Xetp_JfJIYCc0tHL_5x32J8YEBj0ktEgdHUgndEsPg579vVzjQpCUbRB_Kl4WthlifMm4px8TV/pub?gid=638369421&single=true&output=csv';
+// Local CSV file paths
+const HOMES_CSV_URL = './data/homes.csv';
+const POOLS_CSV_URL = './data/pools.csv';
 
 function parseCSV(csvText) {
   const lines = csvText.trim().split('\n');
@@ -48,7 +48,7 @@ function parseCSV(csvText) {
 async function fetchCSV(csvUrl) {
   const res = await fetch(csvUrl);
   const text = await res.text();
-  console.log('Raw CSV from', csvUrl, text);
+  console.log('Raw CSV from', csvUrl, text.substring(0, 200));
   return parseCSV(text);
 }
 
@@ -105,7 +105,6 @@ async function init() {
     let homes = [];
     let pools = [];
     
-    // Fetch homes (required)
     try {
       homes = await fetchCSV(HOMES_CSV_URL);
       console.log('Parsed homes:', homes);
@@ -116,7 +115,6 @@ async function init() {
       return;
     }
     
-    // Fetch pools (optional - render homes even if pools fails)
     try {
       pools = await fetchCSV(POOLS_CSV_URL);
       console.log('Parsed pools:', pools);
