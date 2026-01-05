@@ -87,14 +87,10 @@ function getZillowImageUrl(zillowUrl) {
   const zpidMatch = zillowUrl.match(/\/(\d+)_zpid/);
   if (zpidMatch && zpidMatch[1]) {
     const zpid = zpidMatch[1];
-    // Try direct Zillow image URL - images loaded via <img> tag often work even if fetch doesn't
-    // Format: https://photos.zillowstatic.com/fp/{zpid}_cc_ft_{width}_{height}_sq.jpg
-    const imageUrl = `https://photos.zillowstatic.com/fp/${zpid}_cc_ft_768_576_sq.jpg`;
-    
-    console.log('Generated Zillow image URL for zpid:', zpid, 'URL:', imageUrl);
-    return imageUrl;
+    // Use local image if available, otherwise return empty (image will be hidden)
+    const localImageUrl = `./images/${zpid}.jpg`;
+    return localImageUrl;
   }
-  console.log('Could not extract zpid from URL:', zillowUrl);
   return '';
 }
 

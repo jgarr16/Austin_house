@@ -1,0 +1,16 @@
+{
+  "name": "austin-house",
+  "version": "1.0.0",
+  "description": "Austin House Guide - Download and process Zillow images",
+  "scripts": {
+    "download-images": "node download-images.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "sharp": "^0.33.0",
+    "csv-parser": "^3.0.0",
+    "node-fetch": "^2.7.0",
+    "puppeteer": "^21.5.0"
+  }
+}
+
