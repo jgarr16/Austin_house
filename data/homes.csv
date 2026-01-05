@@ -1,6 +1,6 @@
 Viable?,Monthly Rent,Address,City,State,Zip Code,Area,Bedrooms,Bath,Square Footage,Floors,Pool,Property Type,Built,Agent,Phone,Conf,Tour date,Tour time,Contact?,sent email,responded,Notes,Zillow URL,Map URL,Rank
 Maybe,"$2,150.00",11248 Lost Maples Trl,Austin,TX,78748,South Austin,2,2.5,1753,carpet upstairs,,Condo,,John Sjoberg,(512) 944-2301,FALSE,,,Sent,2025-12-31,,Resent to text,https://www.zillow.com/homedetails/11248-Lost-Maples-Trl-11248-Austin-TX-78748/119617043_zpid/,https://maps.app.goo.gl/wYHNggDyCkgkk8Ds5,
-Yes,"$2,600.00",2012 Cleese Dr #182C,Austin,TX,78741,East Austin,3,3,1651,"carpet upstairs, 3 floors",Mabel Davis,House,,Kevin Lee,(770) 634-2806,FALSE,,,Responded,2025-12-28,2025-12-29,Kevin - 770-634-2806 kevin733@gmail.com,https://www.zillow.com/homedetails/2012-Cleese-Dr-182C-Austin-TX-78741/251031930_zpid/?utm_campaign=zillowwebmessage&utm_medium=referral&utm_source=txtshare,https://maps.app.goo.gl/YWwdLxDSUcVkipfSA,
+No,"$2,600.00",2012 Cleese Dr #182C,Austin,TX,78741,East Austin,3,3,1651,"carpet upstairs, 3 floors",Mabel Davis,House,,Kevin Lee,(770) 634-2806,FALSE,,,Responded,2025-12-28,2025-12-29,Kevin - 770-634-2806 kevin733@gmail.com,https://www.zillow.com/homedetails/2012-Cleese-Dr-182C-Austin-TX-78741/251031930_zpid/?utm_campaign=zillowwebmessage&utm_medium=referral&utm_source=txtshare,https://maps.app.goo.gl/YWwdLxDSUcVkipfSA,
 Yes,"$3,775.00",7710 Watson St,Austin,TX,78757,North Austin,3,2.5,1750,no carpet,,Condo,,Sue Lopez,(512) 720-9065,TRUE,1/7/2026,17:00,Responded,2025-12-11,2025-12-12,,https://www.zillow.com/homedetails/Austin-TX-78757/2070987475_zpid/?,https://maps.app.goo.gl/R65CVCRktNoTWjhZA,
 Yes,"$3,100.00",2624 Metcalfe Rd #7,Austin,TX,78741,East Austin,3,2.5,1600,no carpet,Mabel Davis,House,2020,Connor Matthews,(512) 987-1165,FALSE,,,Responded,2025-12-28,2025-12-29,Available except for 2-4 PM on the 8th,https://www.zillow.com/homedetails/2624-Metcalfe-Rd-7-Austin-TX-78741/337142325_zpid/,https://maps.app.goo.gl/UygfNtVHnRu8N5QJ8,
 Maybe,"$2,195.00",3101 Davis Ln APT 6203,Austin,TX,78748,South Austin,2,2.5,1473,carpet upstairs,,Condo,,Michael Laibovitz,(512) 791-7699,FALSE,,,Sent,2025-12-31,,Resent to text,https://www.zillow.com/homedetails/3101-Davis-Ln-APT-6203-Austin-TX-78748/119619197_zpid/,https://maps.app.goo.gl/XXJfNvDT2SUyJhqh6,
@@ -27,3 +27,4 @@ Yes,"$2,200.00",9618 Copper Creek Dr,Austin,TX,78729,North Austin,3,2,1509,no ca
 ,,,,,,,,,,,,,,,,FALSE,,,,,,,,,
 
 ,,,,,,,,,,,,,,,,FALSE,,,,,,,,,
+
